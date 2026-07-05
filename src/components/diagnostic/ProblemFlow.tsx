@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   Lightbulb,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Download // New icon for downloading
 } from 'lucide-react';
 
 interface DiagnosticQuestion {
@@ -109,75 +110,101 @@ export default function ProblemFlow() {
     }
   };
 
+  // Triggers modern high-fidelity vector PDF engine natively
+  const handleDownloadPDF = () => {
+    if (typeof window !== 'undefined') {
+      window.print();
+    }
+  };
+
   // 1. FINAL ACTION PLAN / SOLUTION VIEW
   if (solution) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 p-4 md:p-8 font-sans animate-in fade-in duration-300">
-        <div className="max-w-5xl mx-auto space-y-8">
+      <div className="min-h-screen bg-slate-50 text-slate-900 p-4 md:p-8 font-sans animate-in fade-in duration-300 print:bg-white print:p-0">
+        
+        {/* Print-Only Style Injection to manage standard paper margins cleanly */}
+        <style jsx global>{`
+          @media print {
+            @page { size: A4; margin: 15mm 15mm; }
+            body { background: white; color: #0f172a; }
+          }
+        `}</style>
+
+        <div className="max-w-5xl mx-auto space-y-8 print:space-y-6">
           
           {/* Top Bar / Header */}
-          <header className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <header className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-6 print:border-slate-100 print:shadow-none print:p-4">
             <div className="space-y-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
+              <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full print:bg-slate-100 print:text-indigo-700">
                 <CheckCircle2 size={14} /> Analysis Complete
               </span>
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">
                 Your Custom Action Plan
               </h2>
-              <p className="text-sm text-slate-600 max-w-2xl bg-slate-50 p-3 rounded-xl border border-slate-100 italic">
+              <p className="text-sm text-slate-600 max-w-2xl bg-slate-50 p-3 rounded-xl border border-slate-100 italic print:bg-slate-50">
                 &ldquo;{diagnosticData?.refined_problem_statement}&rdquo;
               </p>
             </div>
             
-            <button 
-              onClick={() => {
-                setSolution(null);
-                setDiagnosticData(null);
-                setProblemText('');
-                setCurrentDiagStep(0);
-                setDiagnosticAnswers({});
-              }}
-              className="w-full md:w-auto px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 rounded-xl transition-all text-sm font-medium flex items-center justify-center gap-2 shadow-sm"
-            >
-              <RefreshCw size={15} /> Start Over
-            </button>
+            {/* Interactive Control Panel - Hidden perfectly when downloaded/printed */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto print:hidden">
+              <button 
+                onClick={handleDownloadPDF}
+                className="w-full sm:w-auto px-3  py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md cursor-pointer transition-all text-sm font-semibold flex items-center justify-center gap-2 shadow-sm shadow-indigo-100 hover:shadow-md"
+              >
+                <Download size={15} /> Download PDF
+              </button>
+
+              <button 
+                onClick={() => {
+                  setSolution(null);
+                  setDiagnosticData(null);
+                  setProblemText('');
+                  setCurrentDiagStep(0);
+                  setDiagnosticAnswers({});
+                }}
+                className="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 cursor-pointer text-slate-700 rounded-xl transition-all text-sm font-medium flex items-center justify-center gap-2 shadow-sm"
+              >
+                <RefreshCw size={15} /> Start Over
+              </button>
+            </div>
           </header>
 
           {/* Primary Strategy: Action vs Avoid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2 print:gap-4">
             {/* Green Core Action Card */}
-            <div className="bg-white border border-emerald-200 rounded-2xl p-6 shadow-sm space-y-4 hover:shadow-md transition-shadow">
+            <div className="bg-white border border-emerald-200 rounded-2xl p-6 shadow-sm space-y-4 hover:shadow-md transition-shadow print:border-emerald-300 print:shadow-none">
               <div className="flex justify-between items-center pb-2 border-b border-emerald-50">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md print:bg-emerald-50">
                   What You Should Do
                 </h3>
-                <Lightbulb size={18} className="text-emerald-600" />
+                <Lightbulb size={18} className="text-emerald-600 print:hidden" />
               </div>
-              <p className="text-slate-700 text-sm leading-relaxed line-clamp-4 font-normal">
+              <p className="text-slate-700 text-sm leading-relaxed font-normal print:text-slate-900">
                 {solution.action_item}
               </p>
               <button 
                 onClick={() => setModalContent({ title: 'Recommended Strategy', content: solution.action_item })}
-                className="text-xs text-indigo-600 hover:text-indigo-700 hover:underline transition-colors flex items-center gap-1 font-semibold pt-2"
+                className="text-xs text-indigo-600 hover:text-indigo-700 hover:underline transition-colors flex items-center gap-1 font-semibold pt-2 print:hidden"
               >
                 Read full strategy <ChevronRight size={14} />
               </button>
             </div>
 
             {/* Red Avoidance Card */}
-            <div className="bg-white border border-rose-200 rounded-2xl p-6 shadow-sm space-y-4 hover:shadow-md transition-shadow">
+            <div className="bg-white border border-rose-200 rounded-2xl p-6 shadow-sm space-y-4 hover:shadow-md transition-shadow print:border-rose-300 print:shadow-none">
               <div className="flex justify-between items-center pb-2 border-b border-rose-50">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-rose-700 bg-rose-50 px-2.5 py-1 rounded-md">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-rose-700 bg-rose-50 px-2.5 py-1 rounded-md print:bg-rose-50">
                   What to Avoid Doing
                 </h3>
-                <AlertTriangle size={18} className="text-rose-600" />
+                <AlertTriangle size={18} className="text-rose-600 print:hidden" />
               </div>
-              <p className="text-slate-700 text-sm leading-relaxed line-clamp-4 font-normal">
+              <p className="text-slate-700 text-sm leading-relaxed font-normal print:text-slate-900">
                 {solution.avoid_item}
               </p>
               <button 
                 onClick={() => setModalContent({ title: 'Things to Avoid', content: solution.avoid_item })}
-                className="text-xs text-indigo-600 hover:text-indigo-700 hover:underline transition-colors flex items-center gap-1 font-semibold pt-2"
+                className="text-xs text-indigo-600 hover:text-indigo-700 hover:underline transition-colors flex items-center gap-1 font-semibold pt-2 print:hidden"
               >
                 Read full warnings <ChevronRight size={14} />
               </button>
@@ -185,87 +212,87 @@ export default function ProblemFlow() {
           </div>
 
           {/* Reflection & Key Principle Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 print:grid-cols-3 print:gap-4">
             {/* Questions to ask yourself */}
-            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+            <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm print:col-span-2 print:border-slate-200 print:shadow-none">
               <div>
                 <h3 className="text-md font-bold text-slate-900 flex items-center gap-2">
-                  <HelpCircle size={18} className="text-indigo-600" /> Questions for Self-Reflection
+                  <HelpCircle size={18} className="text-indigo-600 print:text-slate-700" /> Questions for Self-Reflection
                 </h3>
-                <p className="text-xs text-slate-500 mt-1">Think deeply about these questions to break your current patterns:</p>
+                <p className="text-xs text-slate-500 mt-1 print:text-slate-600">Think deeply about these questions to break your current patterns:</p>
               </div>
               
               <div className="space-y-3">
                 {solution.truth_seeking_questions?.map((question, idx) => (
-                  <div key={idx} className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl flex gap-3 items-start">
-                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 w-5 h-5 shrink-0 rounded-full flex items-center justify-center border border-indigo-100">
+                  <div key={idx} className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl flex gap-3 items-start print:bg-slate-50 print:border-slate-200">
+                    <span className="text-xs font-bold text-indigo-600 bg-indigo-50 w-5 h-5 shrink-0 rounded-full flex items-center justify-center border border-indigo-100 print:border-slate-300 print:bg-slate-200 print:text-slate-800">
                       {idx + 1}
                     </span>
-                    <p className="text-sm text-slate-700 font-medium leading-relaxed">{question}</p>
+                    <p className="text-sm text-slate-700 font-medium leading-relaxed print:text-slate-900">{question}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Practical Rule / Principle */}
-            <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between space-y-6 shadow-sm">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between space-y-6 shadow-sm print:border-slate-200 print:shadow-none print:p-5">
               <div className="space-y-3">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-700 bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-700 bg-indigo-50 px-2 py-1 rounded border border-indigo-100 print:bg-slate-100 print:text-slate-800 print:border-slate-200">
                   Key Principle Focus
                 </span>
                 <div className="space-y-2">
                   <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <BookOpen size={16} className="text-slate-500" /> 
+                    <BookOpen size={16} className="text-slate-500 print:hidden" /> 
                     {solution.book_mastery_law?.split(':')[0] || 'Behavioral Principle'}
                   </h4>
-                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 print:bg-slate-50 print:text-slate-800">
                     {solution.book_mastery_law?.split(':').slice(1).join(':').trim() || solution.book_mastery_law}
                   </p>
                 </div>
               </div>
 
-              <div className="p-3.5 bg-amber-50 border border-amber-200 text-amber-950 rounded-xl text-xs leading-relaxed">
+              <div className="p-3.5 bg-amber-50 border border-amber-200 text-amber-950 rounded-xl text-xs leading-relaxed print:bg-amber-50/40 print:border-amber-200">
                 <strong>Next Step:</strong> Try focusing heavily on applying this single principle over the next 3 days.
               </div>
             </div>
           </div>
 
           {/* Deep Insight Breakdowns */}
-          <div className="pt-4 border-t border-slate-200">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">
+          <div className="pt-4 border-t border-slate-200 print:pt-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 print:mb-2">
               Understanding the Root Dynamics
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:grid-cols-2 print:gap-4">
               {[
                 { label: 'Why This Formed (Root Cause)', content: solution.root_cause_analysis },
                 { label: 'The Long-Term Risk (If Left Unchecked)', content: solution.progression_warning },
                 { label: 'Mind & Body Connection', content: solution.psycho_biological_view },
                 { label: 'Mindset & Perspective Shift', content: solution.philosophical_morality_view },
               ].map((item, i) => (
-                <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-1.5">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                <div key={i} className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-1.5 print:shadow-none print:p-4 print:border-slate-200 page-break-inside-avoid">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 print:text-slate-900">
                     {item.label}
                   </h4>
-                  <p className="text-slate-600 text-sm leading-relaxed">{item.content}</p>
+                  <p className="text-slate-600 text-sm leading-relaxed print:text-slate-800">{item.content}</p>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Final Advice Quote */}
-          <div className="p-5 bg-slate-900 text-slate-100 rounded-2xl shadow-sm">
-            <p className="text-[10px] font-bold tracking-wider uppercase text-indigo-400 mb-1">Perspective Check</p>
-            <p className="text-sm italic leading-relaxed text-slate-300">
+          <div className="p-5 bg-slate-900 text-slate-100 rounded-2xl shadow-sm print:bg-slate-900 print:text-white page-break-inside-avoid">
+            <p className="text-[10px] font-bold tracking-wider uppercase text-indigo-400 mb-1 print:text-indigo-300">Perspective Check</p>
+            <p className="text-sm italic leading-relaxed text-slate-300 print:text-slate-100">
               {solution.literary_quote_advice}
             </p>
           </div>
 
         </div>
 
-        {/* Global Expanded View Modal */}
+        {/* Global Expanded View Modal - Automatically excluded in downloads */}
         {modalContent && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
             <div className="relative w-full max-w-2xl bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-xl max-h-[90vh] flex flex-col">
               <button 
                 onClick={() => setModalContent(null)}
