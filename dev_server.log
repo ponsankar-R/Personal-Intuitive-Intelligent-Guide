@@ -1,0 +1,14 @@
+
+> temp-app@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.2:3000
+- Environments: .env
+✓ Ready in 476ms
+
+○ Compiling /register ...
+ GET /register 200 in 4.8s (next.js: 4.4s, application-code: 401ms)
+ GET /onboarding 200 in 755ms (next.js: 572ms, application-code: 183ms)
+ GET /login 200 in 665ms (next.js: 551ms, application-code: 113ms)
